@@ -1,8 +1,9 @@
 # pacman-contest-tournament-bot
 
-A discord bot which will announce tournaments whenever they happen, in a clean and elegant fashion. 
+A discord bot which will announce tournaments whenever they're published, in a clean and elegant fashion. 
 
 (Designed for RMIT'S variation of the UC Berkeley contest)
+
 
 ## The "I DON'T WANT TO SET UP A BOT, GIMME"
 
@@ -17,7 +18,7 @@ Variables inside the script will have to be set, these include the
 
 ## Usage
 
-Create a channel named "tournament", add the bot to your self, and it (should) announce any updates.
+Create a channel named "tournament" and add the bot to your server. It (should) will announce any new tournaments.
 
 ## Libraries required
 * Pandas
