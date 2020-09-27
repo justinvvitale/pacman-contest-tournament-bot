@@ -88,8 +88,9 @@ async def on_ready():
 
         # Add tournaments to globally tracked
         tournaments.append(latestTournaments)
+
         # Rest easy
-        time.sleep(1000)
+        time.sleep(INTERVAL)
 
 
 @client.event
