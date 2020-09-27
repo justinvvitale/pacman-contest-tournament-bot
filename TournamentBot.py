@@ -53,7 +53,7 @@ async def backgroundTask():
             updateAnnounceChannels()
 
             # Check for tournament update
-            print("Executing cycle(" + str(counter) + ") - " + str(len(client.guilds)) + " guilds and " + str(len(announceChannels)) + "channels")
+            print("Executing cycle(" + str(counter) + ") - " + str(len(client.guilds)) + " guilds and " + str(len(announceChannels)) + " channels")
 
             latestTournaments = list(set(tournaments) - set(fetchTournaments(requests.get(SITE))))
 
