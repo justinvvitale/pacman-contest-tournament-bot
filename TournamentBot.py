@@ -54,7 +54,9 @@ async def on_ready():
 
         latestTournaments = list(set(tournaments) - set(fetchTournaments(requests.get(SITE))))
 
-        latestTournaments = [tournaments[0]]
+        # Bypass (for testing)
+        #latestTournaments = [tournaments[0]]
+
         tournamentDifference = len(latestTournaments)
 
         if tournamentDifference > 0:
@@ -63,13 +65,13 @@ async def on_ready():
             # Print notice
             print("Announcing to " + str(len(client.guilds)) + " guilds")
 
-            link = str(SITE + tournaments[10]['href'])
-
-            resultPage = requests.get(link)
-            leaderboard = fetchLeaderboard(resultPage)
-            configuration = fetchConfiguration(resultPage)
-
             for tournament in latestTournaments:
+                link = str(SITE + tournament['href'])
+
+                resultPage = requests.get(link)
+                leaderboard = fetchLeaderboard(resultPage)
+                configuration = fetchConfiguration(resultPage)
+
                 embed = discord.Embed(
                     title=("Tournament " + str(tournamentDifference + len(tournament))),
                     type="rich",
@@ -88,7 +90,6 @@ async def on_ready():
 
         # Add tournaments to globally tracked
         tournaments.append(latestTournaments)
-
         # Rest easy
         time.sleep(INTERVAL)
 
