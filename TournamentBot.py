@@ -1,4 +1,4 @@
-import time
+import asyncio
 
 import pandas as pd
 
@@ -22,7 +22,7 @@ def updateAnnounceChannels():
 
 def fetchTournaments(page):
     soup = BeautifulSoup(page.content, 'html.parser')
-    return soup.findAll('a')
+    return list(soup.findAll('a'))
 
 
 def fetchLeaderboard(page):
@@ -33,7 +33,7 @@ def fetchLeaderboard(page):
 
 def fetchConfiguration(page):
     soup = BeautifulSoup(page.content, 'html.parser')
-    return soup.findAll('h2')  # TODO don't hardcode this
+    return list(soup.findAll('h2'))  # TODO don't hardcode this
 
 
 # Global variables
@@ -43,14 +43,17 @@ announceChannels = []
 client = discord.Client()
 
 
-@client.event
-async def on_ready():
-    updateAnnounceChannels()
+async def backgroundTask():
+    await client.wait_until_ready()
+    counter = 0
 
-    # Check for tournament update
-    while True:
+    while not client.is_closed():
+        counter += 1
 
-        print("Executing check")
+        updateAnnounceChannels()
+
+        # Check for tournament update
+        print("Executing check(" + str(counter) + ")")
 
         latestTournaments = list(set(tournaments) - set(fetchTournaments(requests.get(SITE))))
 
@@ -89,9 +92,9 @@ async def on_ready():
                     await announceChannel.send(embed=embed)
 
         # Add tournaments to globally tracked
-        tournaments.append(latestTournaments)
-        # Rest easy
-        time.sleep(INTERVAL)
+        tournaments.extend(latestTournaments)
+
+        await asyncio.sleep(INTERVAL)
 
 
 @client.event
@@ -114,4 +117,5 @@ async def on_guild_role_update(before, after):
     updateAnnounceChannels()
 
 
+client.loop.create_task(backgroundTask())
 client.run(TOKEN)
