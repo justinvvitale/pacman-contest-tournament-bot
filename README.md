@@ -26,6 +26,7 @@ Create a channel named "tournament", add the bot to your self, and it (should) a
 * asyncio
 * lxml
 * html5lib
+* requests
 
 
 ## FYI

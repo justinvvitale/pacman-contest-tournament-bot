@@ -53,7 +53,7 @@ async def backgroundTask():
             updateAnnounceChannels()
 
             # Check for tournament update
-            print("Executing check(" + str(counter) + ")")
+            print("Executing cycle(" + str(counter) + ") - " + str(len(client.guilds)) + " guilds and " + str(len(announceChannels)) + "channels")
 
             latestTournaments = list(set(tournaments) - set(fetchTournaments(requests.get(SITE))))
 
@@ -63,10 +63,7 @@ async def backgroundTask():
             tournamentDifference = len(latestTournaments)
 
             if tournamentDifference > 0:
-                print(str(len(latestTournaments)) + " new tournament(s) found")
-
-                # Print notice
-                print("Announcing to " + str(len(client.guilds)) + " guilds")
+                print(str(len(latestTournaments)) + " new tournament(s) found, announcing...")
 
                 for tournament in latestTournaments:
                     link = str(SITE + tournament['href'])
