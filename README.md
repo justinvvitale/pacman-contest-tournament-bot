@@ -1,0 +1,1 @@
+pacman-contest-tournament-bot
