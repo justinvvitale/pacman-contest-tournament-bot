@@ -49,50 +49,55 @@ async def backgroundTask():
 
     while not client.is_closed():
         counter += 1
+        try:
+            updateAnnounceChannels()
 
-        updateAnnounceChannels()
+            # Check for tournament update
+            print("Executing check(" + str(counter) + ")")
 
-        # Check for tournament update
-        print("Executing check(" + str(counter) + ")")
+            latestTournaments = list(set(tournaments) - set(fetchTournaments(requests.get(SITE))))
 
-        latestTournaments = list(set(tournaments) - set(fetchTournaments(requests.get(SITE))))
+            # Bypass (for testing)
+            # latestTournaments = [tournaments[0]]
 
-        # Bypass (for testing)
-        #latestTournaments = [tournaments[0]]
+            tournamentDifference = len(latestTournaments)
 
-        tournamentDifference = len(latestTournaments)
+            if tournamentDifference > 0:
+                print(str(len(latestTournaments)) + " new tournament(s) found")
 
-        if tournamentDifference > 0:
-            print(str(len(latestTournaments)) + " new tournament(s) found")
+                # Print notice
+                print("Announcing to " + str(len(client.guilds)) + " guilds")
 
-            # Print notice
-            print("Announcing to " + str(len(client.guilds)) + " guilds")
+                for tournament in latestTournaments:
+                    link = str(SITE + tournament['href'])
 
-            for tournament in latestTournaments:
-                link = str(SITE + tournament['href'])
+                    resultPage = requests.get(link)
+                    leaderboard = fetchLeaderboard(resultPage)
+                    configuration = fetchConfiguration(resultPage)
 
-                resultPage = requests.get(link)
-                leaderboard = fetchLeaderboard(resultPage)
-                configuration = fetchConfiguration(resultPage)
+                    embed = discord.Embed(
+                        title=("Tournament " + str(tournamentDifference + len(tournament))),
+                        type="rich",
+                        url=link,
+                        description=("**"
+                                     + configuration[2].text
+                                     + "**\n```"
+                                     + leaderboard.iloc[:, [0, 1, 2]].to_string(index=False)
+                                     + "```\n"
+                                     + str(configuration[1].contents[0]))
+                    )
 
-                embed = discord.Embed(
-                    title=("Tournament " + str(tournamentDifference + len(tournament))),
-                    type="rich",
-                    url=link,
-                    description=("**"
-                                 + configuration[2].text
-                                 + "**\n```"
-                                 + leaderboard.iloc[:, [0, 1, 2]].to_string(index=False)
-                                 + "```\n"
-                                 + str(configuration[1].contents[0]))
-                )
+                    # Send message
+                    for announceChannel in announceChannels:
+                        try:
+                            await announceChannel.send(embed=embed)
+                        except:
+                            print("Error announcing")
 
-                # Send message
-                for announceChannel in announceChannels:
-                    await announceChannel.send(embed=embed)
-
-        # Add tournaments to globally tracked
-        tournaments.extend(latestTournaments)
+            # Add tournaments to globally tracked
+            tournaments.extend(latestTournaments)
+        except:
+            print("Error performing announcement")
 
         await asyncio.sleep(INTERVAL)
 
@@ -109,6 +114,16 @@ async def on_guild_remove(guild):
 
 @client.event
 async def on_guild_channel_update(before, after):
+    updateAnnounceChannels()
+
+
+@client.event
+async def on_guild_channel_delete(channel):
+    updateAnnounceChannels()
+
+
+@client.event
+async def on_guild_channel_create(channel):
     updateAnnounceChannels()
 
 
