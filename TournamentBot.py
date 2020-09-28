@@ -14,6 +14,8 @@ AMOUNT_DISPLAY = 10  # How much of the leaderboard to display in the embed
 
 # Helper functions
 def updateAnnounceChannels():
+    announceChannels.clear()
+
     # Fetching announce channels
     for channel in client.get_all_channels():
         if "tournament" in str(channel.name) and channel.permissions_for(channel.guild.me).send_messages:
@@ -55,10 +57,10 @@ async def backgroundTask():
             # Check for tournament update
             print("Executing cycle(" + str(counter) + ") - " + str(len(client.guilds)) + " guilds and " + str(len(announceChannels)) + " channels")
 
-            latestTournaments = list(set(tournaments) - set(fetchTournaments(requests.get(SITE))))
+            latestTournaments = list(set(fetchTournaments(requests.get(SITE))) - set(tournaments))
 
             # Bypass (for testing)
-            # latestTournaments = [tournaments[0]]
+            # latestTournaments = [tournaments[-1]]
 
             tournamentDifference = len(latestTournaments)
 
@@ -73,7 +75,7 @@ async def backgroundTask():
                     configuration = fetchConfiguration(resultPage)
 
                     embed = discord.Embed(
-                        title=("Tournament " + str(tournamentDifference + len(tournament))),
+                        title=("Tournament " + str(tournamentDifference + len(tournaments))),
                         type="rich",
                         url=link,
                         description=("**"
@@ -90,12 +92,14 @@ async def backgroundTask():
                             await announceChannel.send(embed=embed)
                         except:
                             print("Error announcing")
+                    tournamentDifference -= 1
 
-            # Add tournaments to globally tracked
-            tournaments.extend(latestTournaments)
+                # Add tournaments to globally tracked
+                tournaments.extend(latestTournaments)
         except:
             print("Error performing announcement")
 
+        print("Finished cycle(" + str(counter) + ")")
         await asyncio.sleep(INTERVAL)
 
 
