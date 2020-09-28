@@ -2,6 +2,7 @@ import asyncio
 
 import pandas as pd
 
+from time import strftime, localtime
 import discord
 import requests
 from bs4 import BeautifulSoup
@@ -46,16 +47,20 @@ client = discord.Client()
 
 
 async def backgroundTask():
-    await client.wait_until_ready()
-    counter = 0
+    while True:
+        await client.wait_until_ready()
+        counter = 0
 
-    updateAnnounceChannels()
+        updateAnnounceChannels()
 
-    while not client.is_closed():
-        counter += 1
-        try:
+        print('Connected with {0.user}'.format(client))
+
+        while not client.is_closed():
+            counter += 1
+
             # Check for tournament update
-            print("Executing cycle(" + str(counter) + ") - " + str(len(client.guilds)) + " guilds and " + str(len(announceChannels)) + " channels")
+            print("Executing cycle(" + str(counter) + ") at [" + strftime("%d-%m-%Y- %H:%M %p", localtime()) + "] - "
+                  + str(len(client.guilds)) + " guilds and " + str(len(announceChannels)) + " channels")
 
             # Bypass (for testing) prints latest one
             # tournaments.pop()
@@ -91,16 +96,16 @@ async def backgroundTask():
                         try:
                             await announceChannel.send(embed=embed)
                         except:
-                            print("Error announcing")
+                            print("Error announcing to a channel")
                     tournamentDifference -= 1
 
                 # Add tournaments to globally tracked
                 tournaments.extend(latestTournaments)
-        except:
-            print("Error performing announcement")
 
-        print("Finished cycle(" + str(counter) + ")")
-        await asyncio.sleep(INTERVAL)
+            print("Finished cycle(" + str(counter) + ")")
+            await asyncio.sleep(INTERVAL)
+
+        print("Client lost connection")
 
 
 @client.event
