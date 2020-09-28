@@ -1,4 +1,5 @@
 import asyncio
+import traceback
 
 import pandas as pd
 
@@ -70,37 +71,42 @@ async def backgroundTask():
             tournamentDifference = len(latestTournaments)
 
             if tournamentDifference > 0:
-                print(str(len(latestTournaments)) + " new tournament(s) found, announcing...")
+                print(str(tournamentDifference) + " new tournament(s) found, announcing...")
+                try:
+                    for tournament in latestTournaments:
+                        link = str(SITE + tournament['href'])
 
-                for tournament in latestTournaments:
-                    link = str(SITE + tournament['href'])
+                        resultPage = requests.get(link)
+                        leaderboard = fetchLeaderboard(resultPage)
+                        configuration = fetchConfiguration(resultPage)
 
-                    resultPage = requests.get(link)
-                    leaderboard = fetchLeaderboard(resultPage)
-                    configuration = fetchConfiguration(resultPage)
+                        embed = discord.Embed(
+                            title=("Tournament (HISTORIC TEST) " + str(tournamentDifference + len(tournaments))),
+                            type="rich",
+                            url=link,
+                            description=("**"
+                                         + configuration[2].text
+                                         + "**\n```"
+                                         + leaderboard.iloc[:, [0, 1, 2]].to_string(index=False)
+                                         + "```\n"
+                                         + str(configuration[1].contents[0]))
+                        )
 
-                    embed = discord.Embed(
-                        title=("Tournament " + str(tournamentDifference + len(tournaments))),
-                        type="rich",
-                        url=link,
-                        description=("**"
-                                     + configuration[2].text
-                                     + "**\n```"
-                                     + leaderboard.iloc[:, [0, 1, 2]].to_string(index=False)
-                                     + "```\n"
-                                     + str(configuration[1].contents[0]))
-                    )
+                        # Send message
+                        for announceChannel in announceChannels:
+                            try:
+                                await announceChannel.send(embed=embed)
+                            except:
+                                print("Error announcing to a channel")
+                                print(traceback.print_exc())
+                        tournamentDifference -= 1
 
-                    # Send message
-                    for announceChannel in announceChannels:
-                        try:
-                            await announceChannel.send(embed=embed)
-                        except:
-                            print("Error announcing to a channel")
-                    tournamentDifference -= 1
+                    # Add tournaments to globally tracked
+                    tournaments.extend(latestTournaments)
 
-                # Add tournaments to globally tracked
-                tournaments.extend(latestTournaments)
+                except:
+                    print("Error announcing")
+                    print(traceback.print_exc())
 
             print("Finished cycle(" + str(counter) + ")")
             await asyncio.sleep(INTERVAL)
