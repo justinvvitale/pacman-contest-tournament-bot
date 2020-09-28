@@ -14,6 +14,7 @@ TOKEN = "RETRACTED"  # Discord token
 INTERVAL = 3600  # How often to check the site for tournaments
 AMOUNT_DISPLAY = 10  # How much of the leaderboard to display in the embed
 ADMIN = ["SOMENAME#1234"]  # Discord members who's allowed to make announcements
+CHECK_DIRS = ["SUBDIR"]
 
 
 # Helper functions
@@ -37,13 +38,23 @@ def updateAnnounceChannels():
 
 def fetchTournaments(page):
     soup = BeautifulSoup(page.content, 'html.parser')
-    return list(soup.findAll('a'))
+    aList = list(soup.findAll('a'))
+    return list(filter(lambda x: ("result" in str(x.string).lower()), aList))
+
+
+def fetchAllTournaments():
+    allTournaments = []
+    for dire in CHECK_DIRS:
+        dirTournaments = fetchTournaments(requests.get(SITE + dire + "/"))
+
+        for dirTournament in dirTournaments:
+            allTournaments.append((str(dirTournament.string).strip(), dire))
+
+    return allTournaments
 
 
 def fetchLeaderboard(page):
-    dfList = pd.read_html(page.text)  # this parses all the tables in webpages to a df list
-    leaderboardDF = dfList[0].head(AMOUNT_DISPLAY)
-    return leaderboardDF
+    return pd.read_html(page.text)[0]
 
 
 def fetchConfiguration(page):
@@ -60,9 +71,9 @@ def getDefaultChannel(guild):
 
 async def pollAnnounce():
     # Bypass (for testing) prints latest one
-    # tournaments.pop()
+    #tournaments.pop()
 
-    latestTournaments = list(set(fetchTournaments(requests.get(SITE))) - set(tournaments))
+    latestTournaments = list(set(fetchAllTournaments()) - set(tournaments))
 
     tournamentDifference = len(latestTournaments)
 
@@ -70,14 +81,14 @@ async def pollAnnounce():
         print(str(tournamentDifference) + " new tournament(s) found, announcing...")
         try:
             for tournament in latestTournaments:
-                link = str(SITE + tournament['href'])
+                link = str(SITE + tournament[1] + "/" + tournament[0] + "/results.html")
 
                 resultPage = requests.get(link)
-                leaderboard = fetchLeaderboard(resultPage)
+                leaderboard = fetchLeaderboard(resultPage).head(AMOUNT_DISPLAY)
                 configuration = fetchConfiguration(resultPage)
 
                 embed = discord.Embed(
-                    title=("Tournament (HISTORIC TEST) " + str(tournamentDifference + len(tournaments))),
+                    title=("Tournament (" + tournament[0] + ")"),
                     type="rich",
                     url=link,
                     description=("**"
@@ -95,7 +106,6 @@ async def pollAnnounce():
                     except:
                         print("Error announcing to a channel")
                         print(traceback.print_exc())
-                tournamentDifference -= 1
 
             # Add tournaments to globally tracked
             tournaments.extend(latestTournaments)
@@ -106,16 +116,17 @@ async def pollAnnounce():
 
 
 # Global variables
-tournaments = fetchTournaments(requests.get(SITE))
+tournaments = fetchAllTournaments()
 announceChannels = []
 
-bot = Bot(command_prefix='@')
+bot = Bot(command_prefix='?')
 
 
 @bot.command()
 async def commands(ctx):
     await ctx.send("**Tournament bot commands**\n"
-                   "> forcepoll - Force a tournament check"
+                   "> forcepoll - Force a tournament check",
+                   "> positon <teamname> - Give you your position for the last tournament (Bit funky till a tournament actually happens)"
                    )
 
 
@@ -124,6 +135,35 @@ async def forcepoll(ctx):
     print("Force polling requested by " + str(ctx.author))
     await ctx.send("Checking site for new tournaments...")
     await pollAnnounce()
+
+
+@bot.command()
+async def position(ctx, arg):
+    print("position request from " + str(ctx.author))
+    if len(tournaments) == 0:
+        await ctx.send("No tournament found")
+        return
+
+    latestTournament = tournaments[-1]  # Will be funky if we restart bot TODO
+    link = str(SITE + latestTournament[1] + "/" + latestTournament[0] + "/results.html")
+
+    resultPage = requests.get(link)
+
+    teamName = arg.lower()
+    leaderboard = fetchLeaderboard(resultPage)
+    tournamentInfo = latestTournament[1] + "[" + latestTournament[0] + "]"
+
+    ordinal = lambda n: "%d%s" % (n, "tsnrhtdd"[(n // 10 % 10 != 1) * (n % 10 < 4) * n % 10::4])
+
+    for index, row in leaderboard.iterrows():
+        if teamName in str(row["Team"]).lower():
+            await ctx.send(str(row["Team"]) + " is placed "
+                           + str(ordinal(row["Position"]))
+                           + " in "
+                           + tournamentInfo)
+            return
+
+    await ctx.send("Could not find the team specified in " + tournamentInfo)
 
 
 @bot.command()
@@ -146,7 +186,7 @@ async def backgroundTask():
         counter = 0
 
         await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching,
-                                                            name="for tournaments"))
+                                                            name="site (?help)"))
 
         updateAnnounceChannels()
 
