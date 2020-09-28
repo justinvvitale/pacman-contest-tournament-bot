@@ -19,8 +19,17 @@ def updateAnnounceChannels():
     announceChannels.clear()
 
     # Fetching announce channels
+    guilds = client.guilds
     for channel in client.get_all_channels():
         if "tournament" in str(channel.name) and channel.permissions_for(channel.guild.me).send_messages:
+            announceChannels.append(channel)
+            guilds.remove(channel.guild)
+
+    # If someone fails to make a correct channel, just announce to the system channel
+    for guild in guilds:
+        channel = getDefaultChannel(guild)
+
+        if channel is not None:
             announceChannels.append(channel)
 
 
@@ -38,6 +47,13 @@ def fetchLeaderboard(page):
 def fetchConfiguration(page):
     soup = BeautifulSoup(page.content, 'html.parser')
     return list(soup.findAll('h2'))  # TODO don't hardcode this
+
+
+def getDefaultChannel(guild):
+    systemChannel = guild.system_channel
+    if systemChannel is not None and systemChannel.permissions_for(guild.me):
+        return systemChannel
+    return None
 
 
 # Global variables
