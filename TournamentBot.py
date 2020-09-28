@@ -49,18 +49,18 @@ async def backgroundTask():
     await client.wait_until_ready()
     counter = 0
 
+    updateAnnounceChannels()
+
     while not client.is_closed():
         counter += 1
         try:
-            updateAnnounceChannels()
-
             # Check for tournament update
             print("Executing cycle(" + str(counter) + ") - " + str(len(client.guilds)) + " guilds and " + str(len(announceChannels)) + " channels")
 
-            latestTournaments = list(set(fetchTournaments(requests.get(SITE))) - set(tournaments))
+            # Bypass (for testing) prints latest one
+            # tournaments.pop()
 
-            # Bypass (for testing)
-            # latestTournaments = [tournaments[-1]]
+            latestTournaments = list(set(fetchTournaments(requests.get(SITE))) - set(tournaments))
 
             tournamentDifference = len(latestTournaments)
 
