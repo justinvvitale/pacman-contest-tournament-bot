@@ -9,7 +9,7 @@ import requests
 from bs4 import BeautifulSoup
 from discord.ext.commands import Bot
 
-SITE = "RETRACTED"  # Site pointing to tournament (Base URL)
+SITE = "RETRACTED"  # Site pointing to tournament (Base URL with /)
 TOKEN = "RETRACTED"  # Discord token
 INTERVAL = 3600  # How often to check the site for tournaments
 AMOUNT_DISPLAY = 10  # How much of the leaderboard to display in the embed
@@ -88,7 +88,7 @@ async def pollAnnounce():
                 configuration = fetchConfiguration(resultPage)
 
                 embed = discord.Embed(
-                    title=("Tournament (" + tournament[0] + ")"),
+                    title=("Tournament (" + tournament[1] + ")"),
                     type="rich",
                     url=link,
                     description=("**"
@@ -120,15 +120,6 @@ tournaments = fetchAllTournaments()
 announceChannels = []
 
 bot = Bot(command_prefix='?')
-
-
-@bot.command()
-async def commands(ctx):
-    await ctx.send("**Tournament bot commands**\n"
-                   "> forcepoll - Force a tournament check",
-                   "> positon <teamname> - Give you your position for the last tournament (Bit funky till a tournament actually happens)"
-                   )
-
 
 @bot.command()
 async def forcepoll(ctx):
@@ -205,7 +196,7 @@ async def change(ctx, arg):
     positionChange = positionPrevious - positionLatest
 
     await ctx.send(teamName + " was " + str(ordinal(positionPrevious)) + ", currently " + str(
-        ordinal(positionLatest)) + " | Change: " + str(positionChange))
+        ordinal(positionLatest)) + " | Change: " + ("+" if positionChange > 0 else "") + str(positionChange))
 
 
 @bot.command()
