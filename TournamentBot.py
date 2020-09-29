@@ -24,7 +24,7 @@ def updateAnnounceChannels():
     # Fetching announce channels
     guilds = bot.guilds
     for channel in bot.get_all_channels():
-        if "tournament" in str(channel.name) and channel.permissions_for(channel.guild.me).send_messages:
+        if "tournament" == str(channel.name) and channel.permissions_for(channel.guild.me).send_messages:
             announceChannels.append(channel)
             guilds.remove(channel.guild)
 
