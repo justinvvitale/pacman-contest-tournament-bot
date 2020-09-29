@@ -71,7 +71,7 @@ def getDefaultChannel(guild):
 
 async def pollAnnounce():
     # Bypass (for testing) prints latest one
-    #tournaments.pop()
+    # tournaments.pop()
 
     latestTournaments = list(set(fetchAllTournaments()) - set(tournaments))
 
@@ -164,6 +164,48 @@ async def position(ctx, arg):
             return
 
     await ctx.send("Could not find the team specified in " + tournamentInfo)
+
+
+@bot.command()
+async def change(ctx, arg):
+    print("position change request from " + str(ctx.author))
+    if len(tournaments) <= 1:
+        await ctx.send("Not enough tournament found for comparison")
+        return
+
+    latestTournament = tournaments[-1]  # Will be funky if we restart bot TODO
+    previousTournament = tournaments[-2]
+
+    linkLatest = str(SITE + latestTournament[1] + "/" + latestTournament[0] + "/results.html")
+    linkPrevious = str(SITE + latestTournament[1] + "/" + previousTournament[0] + "/results.html")
+
+    resultLatestPage = requests.get(linkLatest)
+    resultPreviousPage = requests.get(linkPrevious)
+
+    teamName = arg.lower()
+    leaderboardLatest = fetchLeaderboard(resultLatestPage)
+    leaderboardPrevious = fetchLeaderboard(resultPreviousPage)
+
+    positionLatest = None
+    positionPrevious = None
+
+    for index, row in leaderboardLatest.iterrows():
+        if teamName in str(row["Team"]).lower():
+            positionLatest = int(row["Position"])
+
+    for index, row in leaderboardPrevious.iterrows():
+        if teamName in str(row["Team"]).lower():
+            positionPrevious = int(row["Position"])
+
+    if positionLatest is None or positionPrevious is None:
+        await ctx.send("Could not find the team in both tournaments")
+
+    ordinal = lambda n: "%d%s" % (n, "tsnrhtdd"[(n // 10 % 10 != 1) * (n % 10 < 4) * n % 10::4])
+
+    positionChange = positionPrevious - positionLatest
+
+    await ctx.send(teamName + " was " + str(ordinal(positionPrevious)) + ", currently " + str(
+        ordinal(positionLatest)) + " | Change: " + str(positionChange))
 
 
 @bot.command()
