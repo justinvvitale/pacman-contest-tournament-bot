@@ -121,11 +121,18 @@ announceChannels = []
 
 bot = Bot(command_prefix='?')
 
+
 @bot.command()
 async def forcepoll(ctx):
     print("Force polling requested by " + str(ctx.author))
     await ctx.send("Checking site for new tournaments...")
     await pollAnnounce()
+
+
+@bot.command()
+async def tracked(ctx):
+    print("Command tracked, requested by " + str(ctx.author))
+    await ctx.send("Currently holding  " + str(len(tournaments)) + " tournament(s) in memory")
 
 
 @bot.command()
