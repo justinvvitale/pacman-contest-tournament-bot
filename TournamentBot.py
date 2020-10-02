@@ -149,19 +149,29 @@ async def position(ctx, arg):
 
     teamName = arg.lower()
     leaderboard = fetchLeaderboard(resultPage)
-    tournamentInfo = latestTournament[1] + "[" + latestTournament[0] + "]"
+    tournamentInfo = latestTournament[1] + " (" + latestTournament[0] + ")"
 
     ordinal = lambda n: "%d%s" % (n, "tsnrhtdd"[(n // 10 % 10 != 1) * (n % 10 < 4) * n % 10::4])
 
+    teamPosition = None
+    nearestStaffBelow = None
+
     for index, row in leaderboard.iterrows():
         if teamName in str(row["Team"]).lower():
-            await ctx.send(str(row["Team"]) + " is placed "
-                           + str(ordinal(row["Position"]))
-                           + " in "
-                           + tournamentInfo)
-            return
+            teamPosition = row["Position"]
+        if teamPosition is not None:
+            if "staff_team" in str(row["Team"]).lower():
+                nearestStaffBelow = row["Team"]
+                break
 
-    await ctx.send("Could not find the team specified in " + tournamentInfo)
+    if teamPosition is not None:
+        await ctx.send(str(teamName) + " is placed "
+                       + "**" + str(ordinal(teamPosition)) + "**"
+                       + " in "
+                       + tournamentInfo
+                       + ("\n[**Ranked above:** " + nearestStaffBelow + "]") if nearestStaffBelow is not None else "")
+    else:
+        await ctx.send("Could not find the team specified in " + tournamentInfo)
 
 
 @bot.command()
