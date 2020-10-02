@@ -154,7 +154,7 @@ async def position(ctx, arg):
     ordinal = lambda n: "%d%s" % (n, "tsnrhtdd"[(n // 10 % 10 != 1) * (n % 10 < 4) * n % 10::4])
 
     teamPosition = None
-    nearestStaffBelow = None
+    nearestStaffBelow = "Not above any staff teams :sad:"
 
     for index, row in leaderboard.iterrows():
         if teamName in str(row["Team"]).lower():
@@ -169,7 +169,7 @@ async def position(ctx, arg):
                        + "**" + str(ordinal(teamPosition)) + "**"
                        + " in "
                        + tournamentInfo
-                       + ("\n[**Ranked above:** " + nearestStaffBelow + "]") if nearestStaffBelow is not None else "")
+                       + ("\n[**Ranked above:** " + nearestStaffBelow + "]"))
     else:
         await ctx.send("Could not find the team specified in " + tournamentInfo)
 
