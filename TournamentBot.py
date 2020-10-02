@@ -159,10 +159,11 @@ async def position(ctx, arg):
     for index, row in leaderboard.iterrows():
         if teamName in str(row["Team"]).lower():
             teamPosition = row["Position"]
-        if teamPosition is not None:
-            if "staff_team" in str(row["Team"]).lower():
-                nearestStaffBelow = row["Team"]
-                break
+        else:
+            if teamPosition is not None:
+                if "staff_team" in str(row["Team"]).lower():
+                    nearestStaffBelow = row["Team"]
+                    break
 
     if teamPosition is not None:
         await ctx.send(str(teamName) + " is placed "
