@@ -154,7 +154,7 @@ async def position(ctx, arg):
     ordinal = lambda n: "%d%s" % (n, "tsnrhtdd"[(n // 10 % 10 != 1) * (n % 10 < 4) * n % 10::4])
 
     teamPosition = None
-    nearestStaffBelow = "Not above any staff teams :sad:"
+    nearestStaffBelow = "Not above any staff teams :cry:"
 
     for index, row in leaderboard.iterrows():
         if teamName in str(row["Team"]).lower():
