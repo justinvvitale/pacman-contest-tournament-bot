@@ -81,7 +81,7 @@ async def pollAnnounce():
         print(str(tournamentDifference) + " new tournament(s) found, announcing...")
         try:
             for tournament in latestTournaments:
-                link = str(SITE + tournament[1] + "/" + tournament[0] + "/results.html")
+                link = str(SITE + tournament[1] + "/" + tournament[0] + ".html")
 
                 resultPage = requests.get(link)
                 leaderboard = fetchLeaderboard(resultPage).head(AMOUNT_DISPLAY)
