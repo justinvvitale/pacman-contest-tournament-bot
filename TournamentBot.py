@@ -143,7 +143,7 @@ async def position(ctx, arg):
         return
 
     latestTournament = tournaments[-1]  # Will be funky if we restart bot TODO
-    link = str(SITE + latestTournament[1] + "/" + latestTournament[0] + "/results.html")
+    link = str(SITE + latestTournament[1] + "/" + latestTournament[0] + ".html")
 
     resultPage = requests.get(link)
 
@@ -185,8 +185,8 @@ async def change(ctx, arg):
     latestTournament = tournaments[-1]  # Will be funky if we restart bot TODO
     previousTournament = tournaments[-2]
 
-    linkLatest = str(SITE + latestTournament[1] + "/" + latestTournament[0] + "/results.html")
-    linkPrevious = str(SITE + latestTournament[1] + "/" + previousTournament[0] + "/results.html")
+    linkLatest = str(SITE + latestTournament[1] + "/" + latestTournament[0] + ".html")
+    linkPrevious = str(SITE + latestTournament[1] + "/" + previousTournament[0] + ".html")
 
     resultLatestPage = requests.get(linkLatest)
     resultPreviousPage = requests.get(linkPrevious)
