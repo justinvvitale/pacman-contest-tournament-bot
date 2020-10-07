@@ -158,6 +158,7 @@ async def position(ctx, arg):
 
     for index, row in leaderboard.iterrows():
         if teamName in str(row["Team"]).lower():
+            teamName = str(row["Team"])
             teamPosition = row["Position"]
         else:
             if teamPosition is not None:
@@ -171,6 +172,39 @@ async def position(ctx, arg):
                        + " in "
                        + tournamentInfo
                        + ("\n[**Ranked above:** " + nearestStaffBelow + "]"))
+    else:
+        await ctx.send("Could not find the team specified in " + tournamentInfo)
+
+
+@bot.command()
+async def points(ctx, arg):
+    print("point request from " + str(ctx.author))
+    if len(tournaments) == 0:
+        await ctx.send("No tournament found")
+        return
+
+    latestTournament = tournaments[-1]  # Will be funky if we restart bot TODO
+    link = str(SITE + latestTournament[1] + "/" + latestTournament[0] + ".html")
+
+    resultPage = requests.get(link)
+
+    teamName = arg.lower()
+    leaderboard = fetchLeaderboard(resultPage)
+    tournamentInfo = latestTournament[1] + " (" + latestTournament[0] + ")"
+
+    teamPoints = None
+
+    for index, row in leaderboard.iterrows():
+        if teamName in str(row["Team"]).lower():
+            teamName = str(row["Team"])
+            teamPoints = row["Points"]
+            break
+
+    if teamPoints is not None:
+        await ctx.send(str(teamName) + " got "
+                       + "**" + str(teamPoints) + "** points"
+                       + " in "
+                       + tournamentInfo)
     else:
         await ctx.send("Could not find the team specified in " + tournamentInfo)
 
@@ -200,11 +234,14 @@ async def change(ctx, arg):
 
     for index, row in leaderboardLatest.iterrows():
         if teamName in str(row["Team"]).lower():
+            teamName = str(row["Team"])
             positionLatest = int(row["Position"])
+            break
 
     for index, row in leaderboardPrevious.iterrows():
         if teamName in str(row["Team"]).lower():
             positionPrevious = int(row["Position"])
+            break
 
     if positionLatest is None or positionPrevious is None:
         await ctx.send("Could not find the team in both tournaments")
